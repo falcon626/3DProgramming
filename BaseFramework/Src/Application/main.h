@@ -49,7 +49,9 @@ private:
 	KdFPSController	m_fpsController;
 
 	// ゲーム終了フラグ trueで終了する
-	bool		m_endFlag = false;
+	bool            m_endFlag = false;
+		            
+	int             m_count;
 
 //=====================================================
 // シングルトンパターン
