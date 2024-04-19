@@ -50,8 +50,12 @@ private:
 
 	// ゲーム終了フラグ trueで終了する
 	bool            m_endFlag = false;
-		            
-	int             m_count;
+
+	// カメラ
+	std::shared_ptr<KdCamera> m_spCamera = nullptr;
+	
+	// 板ポリゴン
+	std::shared_ptr<KdSquarePolygon> m_spPoly = nullptr;
 
 //=====================================================
 // シングルトンパターン
