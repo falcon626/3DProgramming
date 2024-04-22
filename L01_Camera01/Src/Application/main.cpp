@@ -64,6 +64,16 @@ void Application::PreUpdate()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::Update()
 {
+	// カメラ行列の更新
+	Math::Matrix _localPos = Math::Matrix::CreateTranslation(m_pos.x, 6.0f, 0);
+	// カメラの「World行列」を作成し適応させる
+	Math::Matrix _worldMat = _localPos;
+	m_spCamera->SetCameraMatrix(_worldMat);
+
+	if (GetAsyncKeyState(VK_UP) & 0x8000)  m_pos.z += 0.5f;
+	if (GetAsyncKeyState(VK_DOWN) & 0x8000)m_pos.z -= 0.5f;
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)  m_pos.x += 0.5f;
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000)m_pos.x -= 0.5f;
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -101,6 +111,8 @@ void Application::KdPostDraw()
 void Application::PreDraw()
 {
 	m_spCamera->SetToShader();
+	//Math::Matrix _mat = Math::Matrix::CreateTranslation(m_pos.x, 20, m_pos.z-40);
+	//m_spCamera->SetCameraMatrix(_mat);
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -120,8 +132,9 @@ void Application::Draw()
 	// 陰影のあるオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginLit();
 	{
-		Math::Matrix _mat = Math::Matrix::CreateTranslation(0, 0, 5);
+		Math::Matrix _mat = Math::Matrix::CreateTranslation(0, 5, m_pos.z);
 		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_spPoly,_mat);
+		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_spModel);
 	}
 	KdShaderManager::Instance().m_StandardShader.EndLit();
 
@@ -234,6 +247,13 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	m_spPoly = std::make_shared<KdSquarePolygon>();
 	m_spPoly->SetMaterial("Asset/Textures/LessonData/Character/Hamu.png");
+
+	//===================================================================
+	// モデル初期化
+	//===================================================================
+	m_spModel = std::make_shared<KdModelData>();
+	m_spModel->Load("Asset/Textures/LessonData/Terrain/Terrain.gltf");
+
 
 	return true;
 }
