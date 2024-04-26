@@ -65,15 +65,31 @@ void Application::PreUpdate()
 void Application::Update()
 {
 	// カメラ行列の更新
-	Math::Matrix _localPos = Math::Matrix::CreateTranslation(m_pos.x, 6.0f, 0);
+	auto _mRotstionX = Math::Matrix::CreateRotationX(DirectX::XMConvertToRadians(30));
+	static float _yRot = 0;
+	auto _mRotstionY = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(_yRot));
+	//_yRot += 0.5f;
+	auto _mScale = Math::Matrix::CreateScale(1);
+	Math::Matrix _mTrans = Math::Matrix::CreateTranslation(m_pos.x, 6.0f, -10);
+
 	// カメラの「World行列」を作成し適応させる
-	Math::Matrix _worldMat = _localPos;
+	Math::Matrix _worldMat = _mScale * _mRotstionX * _mTrans * _mRotstionY;
 	m_spCamera->SetCameraMatrix(_worldMat);
+
+	// ハム更新
+	if (GetAsyncKeyState('W') & 0x8000) m_humPos.x+=5.f;
+	if (GetAsyncKeyState('S') & 0x8000) m_humPos.x-=5.f;
+	if (GetAsyncKeyState('A') & 0x8000) m_humPos.z+=5.f;
+	if (GetAsyncKeyState('D') & 0x8000) m_humPos.z-=5.f;
+
+	
 
 	if (GetAsyncKeyState(VK_UP) & 0x8000)  m_pos.z += 0.5f;
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000)m_pos.z -= 0.5f;
 	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)  m_pos.x += 0.5f;
 	if (GetAsyncKeyState(VK_LEFT) & 0x8000)m_pos.x -= 0.5f;
+
+
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -132,8 +148,7 @@ void Application::Draw()
 	// 陰影のあるオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginLit();
 	{
-		Math::Matrix _mat = Math::Matrix::CreateTranslation(0, 5, m_pos.z);
-		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_spPoly,_mat);
+		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_spPoly, m_mHamuWorld);
 		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_spModel);
 	}
 	KdShaderManager::Instance().m_StandardShader.EndLit();
@@ -247,6 +262,7 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	m_spPoly = std::make_shared<KdSquarePolygon>();
 	m_spPoly->SetMaterial("Asset/Textures/LessonData/Character/Hamu.png");
+	m_spPoly->SetPivot(KdSquarePolygon::PivotType::Center_Bottom);
 
 	//===================================================================
 	// モデル初期化
