@@ -65,29 +65,48 @@ void Application::PreUpdate()
 void Application::Update()
 {
 	// カメラ行列の更新
-	auto _mRotstionX = Math::Matrix::CreateRotationX(DirectX::XMConvertToRadians(30));
+	auto _mRotstionX   = Math::Matrix::CreateRotationX(DirectX::XMConvertToRadians(30));
 	static float _yRot = 0;
-	auto _mRotstionY = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(_yRot));
-	//_yRot += 0.5f;
+	auto _mRotstionY   = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(_yRot));
+	_yRot += 0.5f;
 	auto _mScale = Math::Matrix::CreateScale(1);
 	Math::Matrix _mTrans = Math::Matrix::CreateTranslation(m_pos.x, 6.0f, -10);
 
 	// カメラの「World行列」を作成し適応させる
-	Math::Matrix _worldMat = _mScale * _mRotstionX * _mTrans * _mRotstionY;
+	Math::Matrix _worldMat = _mScale * _mRotstionX * _mTrans * _mRotstionY * m_mHamuWorld;
 	m_spCamera->SetCameraMatrix(_worldMat);
 
+	//m_mHamuWorld = Math::Matrix::CreateTranslation(m_humPos);
+
 	// ハム更新
-	if (GetAsyncKeyState('W') & 0x8000) m_humPos.x+=5.f;
-	if (GetAsyncKeyState('S') & 0x8000) m_humPos.x-=5.f;
-	if (GetAsyncKeyState('A') & 0x8000) m_humPos.z+=5.f;
-	if (GetAsyncKeyState('D') & 0x8000) m_humPos.z-=5.f;
+	//if (GetAsyncKeyState('W') & 0x8000) m_humPos.z+=0.2f;
+	//if (GetAsyncKeyState('S') & 0x8000) m_humPos.z-=0.2f;
+	//if (GetAsyncKeyState('A') & 0x8000) m_humPos.x-=0.2f;
+	//if (GetAsyncKeyState('D') & 0x8000) m_humPos.x+=0.2f;
 
-	
+	// 方向ベクトル
+	// キャラクターの移動速度（マネ×）
+	float moveSpd = 0.05f;
+	Math::Vector3 nowPos = m_mHamuWorld.Translation();
+	// 移動したい「方向ベクトル」 = 絶対に長さが１でなければならない
+	Math::Vector3 moveVec = Math::Vector3::Zero;
 
-	if (GetAsyncKeyState(VK_UP) & 0x8000)  m_pos.z += 0.5f;
-	if (GetAsyncKeyState(VK_DOWN) & 0x8000)m_pos.z -= 0.5f;
-	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)  m_pos.x += 0.5f;
-	if (GetAsyncKeyState(VK_LEFT) & 0x8000)m_pos.x -= 0.5f;
+	if (GetAsyncKeyState('W') & 0x8000) { moveVec.z = 1.0f; }
+	if (GetAsyncKeyState('S') & 0x8000) { moveVec.z = -1.0f; }
+	if (GetAsyncKeyState('A') & 0x8000) { moveVec.x = -1.0f; }
+	if (GetAsyncKeyState('D') & 0x8000) { moveVec.x = 1.0f; }
+
+	// 正規化
+	moveVec.Normalize();
+	moveVec *= moveSpd;
+	nowPos += moveVec;
+	// キャラクターのワールド行列を作る
+	m_mHamuWorld = Math::Matrix::CreateTranslation(nowPos);
+
+	if (GetAsyncKeyState(VK_UP) & 0x8000)   m_pos.z += 0.5f;
+	if (GetAsyncKeyState(VK_DOWN) & 0x8000) m_pos.z -= 0.5f;
+	if (GetAsyncKeyState(VK_RIGHT) & 0x8000)m_pos.x += 0.5f;
+	if (GetAsyncKeyState(VK_LEFT) & 0x8000) m_pos.x -= 0.5f;
 
 
 }
