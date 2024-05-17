@@ -1,4 +1,6 @@
 ﻿#include "main.h"
+#include "HamuHamu.h"
+#include "Terrain.h"
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // エントリーポイント
@@ -73,7 +75,7 @@ void Application::Update()
 	Math::Matrix _mTrans = Math::Matrix::CreateTranslation(m_pos.x, 6.0f, -10);
 
 	// カメラの「World行列」を作成し適応させる
-	Math::Matrix _worldMat = _mScale * _mRotstionX * _mTrans * _mRotstionY * m_mHamuWorld;
+	Math::Matrix _worldMat = _mScale * _mRotstionX * _mTrans * _mRotstionY;
 	m_spCamera->SetCameraMatrix(_worldMat);
 
 	//m_mHamuWorld = Math::Matrix::CreateTranslation(m_humPos);
@@ -84,24 +86,15 @@ void Application::Update()
 	//if (GetAsyncKeyState('A') & 0x8000) m_humPos.x-=0.2f;
 	//if (GetAsyncKeyState('D') & 0x8000) m_humPos.x+=0.2f;
 
+	// ゲームオブジェクト更新
+	for (auto& obj : m_GameObjList)
+	{
+		obj->Update();
+	}
+
 	// 方向ベクトル
 	// キャラクターの移動速度（マネ×）
-	float moveSpd = 0.05f;
-	Math::Vector3 nowPos = m_mHamuWorld.Translation();
-	// 移動したい「方向ベクトル」 = 絶対に長さが１でなければならない
-	Math::Vector3 moveVec = Math::Vector3::Zero;
-
-	if (GetAsyncKeyState('W') & 0x8000) { moveVec.z = 1.0f; }
-	if (GetAsyncKeyState('S') & 0x8000) { moveVec.z = -1.0f; }
-	if (GetAsyncKeyState('A') & 0x8000) { moveVec.x = -1.0f; }
-	if (GetAsyncKeyState('D') & 0x8000) { moveVec.x = 1.0f; }
-
-	// 正規化
-	moveVec.Normalize();
-	moveVec *= moveSpd;
-	nowPos += moveVec;
-	// キャラクターのワールド行列を作る
-	m_mHamuWorld = Math::Matrix::CreateTranslation(nowPos);
+	
 
 	if (GetAsyncKeyState(VK_UP) & 0x8000)   m_pos.z += 0.5f;
 	if (GetAsyncKeyState(VK_DOWN) & 0x8000) m_pos.z -= 0.5f;
@@ -167,8 +160,11 @@ void Application::Draw()
 	// 陰影のあるオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginLit();
 	{
-		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_spPoly, m_mHamuWorld);
-		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_spModel);
+		// ゲームオブジェクト描画
+		for (auto& obj : m_GameObjList)
+		{
+			obj->DrawLit();
+		}
 	}
 	KdShaderManager::Instance().m_StandardShader.EndLit();
 
@@ -276,18 +272,19 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	m_spCamera = std::make_shared<KdCamera>();
 
-	//===================================================================
-	// ポリゴン初期化
-	//===================================================================
-	m_spPoly = std::make_shared<KdSquarePolygon>();
-	m_spPoly->SetMaterial("Asset/Textures/LessonData/Character/Hamu.png");
-	m_spPoly->SetPivot(KdSquarePolygon::PivotType::Center_Bottom);
+
 
 	//===================================================================
 	// モデル初期化
 	//===================================================================
-	m_spModel = std::make_shared<KdModelData>();
-	m_spModel->Load("Asset/Textures/LessonData/Terrain/Terrain.gltf");
+	auto _Hamu = std::make_shared<HamuHamu>();
+	_Hamu->Init();
+
+	auto _Terrain = std::make_shared<Terrain>();
+	_Terrain->Init();
+
+	m_GameObjList.emplace_back(_Hamu);
+	m_GameObjList.emplace_back(_Terrain);
 
 
 	return true;
